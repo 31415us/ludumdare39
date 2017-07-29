@@ -10,19 +10,20 @@ using System.Text;
 public class Main : MonoBehaviour {
     Script script;
 
+    List<DynValue> currentCallbacks = new List<DynValue>();
     List<Text> choiceTexts = new List<Text>();
     List<Button> choiceButtons = new List<Button>();
     Text textField;
     Text debugField;
 
-    DynValue currentChoiceCallback;
+    
 
     int debugLinesTop = -1;
     string[] debugLines = new string[20];
 
     public void OnChoice(int choice)
     {
-        script.Call(currentChoiceCallback, choice + 1);
+        script.Call(currentCallbacks[choice]);
     }
 
     void LuaReadAllFiles(string folder)
@@ -50,51 +51,56 @@ public class Main : MonoBehaviour {
         textField = transform.Find("Text").GetComponent<Text>();
         debugField = transform.Find("Console").GetComponent<Text>();
 
-
         for (int i = 1; i <= 4; i++)
         {
             choiceTexts.Add(transform.Find("Choice" + i).Find("Text").GetComponent<Text>());
             choiceButtons.Add(transform.Find("Choice" + i).GetComponent<Button>());
+            currentCallbacks.Add(null);
         }
-        
-
-
-
-
-        Script.DefaultOptions.DebugPrint = s => Debug.LogError(s);
-        script = new Script();
-        script.Globals["SetNewChoice"] = (Action<string, DynValue, Table>)SetNewChoice;
-        script.Globals["Log"] = (Action<string>)Log;
-        script.Globals["data"] = new Table(script);
 
         try
         {
-            string code = File.ReadAllText("scripts/main.lua", System.Text.Encoding.UTF8);
-            script.DoString(code, null, "scripts/main.lua");
+            Script.DefaultOptions.DebugPrint = s => Debug.LogError(s);
+            script = new Script();
+            script.Globals["SetChoices"] = (Action<Table>)SetChoices;
+            script.Globals["Log"] = (Action<string>)Log;
+            script.Globals["data"] = new Table(script);
+
+            try
+            {
+                string code = File.ReadAllText("scripts/main.lua", System.Text.Encoding.UTF8);
+                script.DoString(code, null, "scripts/main.lua");
+            }
+            catch (SyntaxErrorException e)
+            {
+                Debug.LogError("Lua Syntax Error: " + e.DecoratedMessage);
+            }
+            catch (ScriptRuntimeException e)
+            {
+                Debug.LogError("Lua Runtime Error: " + e.DecoratedMessage);
+            }
         }
-        catch (SyntaxErrorException e)
+        catch (Exception e)
         {
-            Debug.LogError("Lua Syntax Error: " + e.DecoratedMessage);
-        }
-        catch (ScriptRuntimeException e)
-        {
-            Debug.LogError("Lua Runtime Error: " + e.DecoratedMessage);
+            Log(e.Message);
         }
 
         //LuaReadAllFiles("scripts");
     }
 
-    public void SetNewChoice(string text, DynValue callback, Table choices)
+    public void SetChoices(Table data)
     {
-        currentChoiceCallback = callback;
-        textField.text = text;
+        textField.text = data.Get("text").String;
+
+        Table choices = data.Get("choices").Table;
         int i = 1;
         for (; i <= 4; i++)
         {
+            Table choice = choices.Get(i).Table;
+            if (choice == null) break;
+            choiceTexts[i - 1].text = choice.Get(1).String;
             choiceButtons[i - 1].gameObject.SetActive(true);
-            string buttonText = choices[i] as string;
-            if (buttonText == null) break;
-            choiceTexts[i - 1].text = buttonText;
+            currentCallbacks[i - 1] = choice.Get(2);
         }
         for (; i <= 4; i++)
         {
