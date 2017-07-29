@@ -7,6 +7,7 @@
 *[Bb]uilds/
 *[Pp]rojectSettings/
 *[Pp]ioneers_Data/
+*[Ss]tart_Data/
 *Assets/AssetStoreTools*
 
 # Visual Studio 2015 cache directory
@@ -26,6 +27,8 @@ ExportedObj/
 *.booproj
 *.svd
 *.pdb
+*.exe
+*.dll
 
 # Unity3D generated meta files
 *.pidb.meta
