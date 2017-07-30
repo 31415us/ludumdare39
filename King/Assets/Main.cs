@@ -61,7 +61,12 @@ public class Main : MonoBehaviour {
         try
         {
             Script.DefaultOptions.DebugPrint = s => Debug.LogError(s);
+            MoonSharp.Interpreter.Loaders.FileSystemScriptLoader scriptLoader = new MoonSharp.Interpreter.Loaders.FileSystemScriptLoader();
+            scriptLoader.ModulePaths = new string[] { "scripts/?.lua" };
+            scriptLoader.IgnoreLuaPathGlobal = true;
+
             script = new Script();
+            script.Options.ScriptLoader = scriptLoader;
             script.Globals["SetChoices"] = (Action<Table>)SetChoices;
             script.Globals["Log"] = (Action<string>)Log;
             script.Globals["data"] = new Table(script);

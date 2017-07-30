@@ -1,3 +1,9 @@
+
+data = {}
+
+local servant = require "servant"
+
+--[[
 local pauls_cows = {
     text = 'Your majesty! My cows are sick.',
     choices = {
@@ -17,5 +23,6 @@ local pauls_cows = {
         },
     }
 }
+]]--
 
-SetChoices(pauls_cows)
+SetChoices(servant.start_day())
