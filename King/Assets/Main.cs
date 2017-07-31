@@ -10,13 +10,14 @@ using System.Text;
 public class Main : MonoBehaviour {
     Script script;
 
-    List<DynValue> currentCallbacks = new List<DynValue>();
-    List<Text> choiceTexts = new List<Text>();
-    List<Button> choiceButtons = new List<Button>();
+    DynValue[] currentCallbacks = new DynValue[8];
+    //List<Text> choiceTexts = new List<Text>();
+    //List<Button> choiceButtons = new List<Button>();
     Text textField;
     Text debugField;
 
-    
+    Transform choices4Panel;
+    Transform choices8Panel;
 
     int debugLinesTop = -1;
     string[] debugLines = new string[20];
@@ -68,13 +69,22 @@ public class Main : MonoBehaviour {
     // Use this for initialization
     void Start () {
         textField = transform.Find("Text").GetComponent<Text>();
-        debugField = transform.Find("Console").GetComponent<Text>();
+        debugField = transform.Find("ConsolePanel/Console").GetComponent<Text>();
 
+        choices4Panel = transform.Find("4Choices");
         for (int i = 1; i <= 4; i++)
         {
-            choiceTexts.Add(transform.Find("Choice" + i).Find("Text").GetComponent<Text>());
-            choiceButtons.Add(transform.Find("Choice" + i).GetComponent<Button>());
-            currentCallbacks.Add(null);
+            Button button = choices4Panel.Find("Choice" + i).GetComponent<Button>();
+            int num = i - 1;
+            button.onClick.AddListener(() => OnChoice(num));
+        }
+
+        choices8Panel = transform.Find("8Choices");
+        for (int i = 1; i <= 8; i++)
+        {
+            Button button = choices8Panel.Find("Choice" + i).GetComponent<Button>();
+            int num = i - 1;
+            button.onClick.AddListener(() => OnChoice(num));
         }
 
         try
@@ -121,18 +131,43 @@ public class Main : MonoBehaviour {
         textField.text = data.Get("text").String;
 
         Table choices = data.Get("choices").Table;
+        Transform panel = null;
+        choices8Panel.gameObject.SetActive(false);
+        choices4Panel.gameObject.SetActive(false);
+        int size = choices.Length;
+        int max = 0;
+        if (size <= 4)
+        {
+            panel = choices4Panel;
+            max = 4;
+        }
+        else if (size <= 8)
+        {
+            panel = choices8Panel;
+            max = 8;
+        }
+        else
+        {
+            Log("Error: can't display more than 8 choices...");
+            return;
+        }
+
+        panel.gameObject.SetActive(true);
         int i = 1;
-        for (; i <= 4; i++)
+        for (; i <= max; i++)
         {
             Table choice = choices.Get(i).Table;
             if (choice == null) break;
-            choiceTexts[i - 1].text = choice.Get(1).String;
-            choiceButtons[i - 1].gameObject.SetActive(true);
+            Button button = panel.Find("Choice" + i).GetComponent<Button>();
+            Text text = button.transform.Find("Text").GetComponent<Text>();
+            text.text = choice.Get(1).String;
+            button.gameObject.SetActive(true);
             currentCallbacks[i - 1] = choice.Get(2);
         }
-        for (; i <= 4; i++)
+        for (; i <= max; i++)
         {
-            choiceButtons[i - 1].gameObject.SetActive(false);
+            Button button = panel.Find("Choice" + i).GetComponent<Button>();
+            button.gameObject.SetActive(false);
         }
     }
 

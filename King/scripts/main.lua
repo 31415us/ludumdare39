@@ -3,6 +3,22 @@ data.people = {}
 
 local king = require "king"
 
+local tmp = {
+    name = "Bob the farmer",
+    on_receive = function()
+        SetChoices({
+            text = "My lord, my deepest thanks for taking the time...",
+            choices = {
+                {
+                    "goodbye",
+                    king.leave_conversation,
+                }
+            },
+        })
+    end,
+    waiting = true,
+}
+
 data.king.waiting = {
     {
         name = "Sir Jamie Oliver",
@@ -16,6 +32,9 @@ data.king.waiting = {
                     }
                 },
             })
+        end,
+        on_reject = function()
+            Log("Sir Jamie Oliver was rejected...")
         end,
         waiting = true,
     },
@@ -32,8 +51,11 @@ data.king.waiting = {
                 },
             })
         end,
+        on_reject = function()
+            Log("Bob the farmer was rejected...")
+        end,
         waiting = true,
-    }
+    },
 }
 
 --[[

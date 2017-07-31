@@ -80,6 +80,11 @@ this.make_done_choice = function()
         "I'm done for today...",
         function ()
             Log("Going to bed...")
+            local waiting = data.king.waiting
+            for i = 1, #waiting do
+                local rejectFn = waiting[i].on_reject
+                if (rejectFn ~= nil) then rejectFn() end
+            end
             SetChoices(you_died)
         end,
     }
