@@ -1,7 +1,40 @@
-
 data = {}
+data.people = {}
 
-local servant = require "servant"
+local king = require "king"
+
+data.king.waiting = {
+    {
+        name = "Sir Jamie Oliver",
+        on_receive = function()
+            SetChoices({
+                text = "Hi father...",
+                choices = {
+                    {
+                        "goodbye",
+                        king.leave_conversation,
+                    }
+                },
+            })
+        end,
+        waiting = true,
+    },
+    {
+        name = "Bob the farmer",
+        on_receive = function()
+            SetChoices({
+                text = "My lord, my deepest thanks for taking the time...",
+                choices = {
+                    {
+                        "goodbye",
+                        king.leave_conversation,
+                    }
+                },
+            })
+        end,
+        waiting = true,
+    }
+}
 
 --[[
 local pauls_cows = {
@@ -25,4 +58,4 @@ local pauls_cows = {
 }
 ]]--
 
-SetChoices(servant.start_day())
+SetChoices(king.make_good_morning())

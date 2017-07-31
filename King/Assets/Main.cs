@@ -23,7 +23,22 @@ public class Main : MonoBehaviour {
 
     public void OnChoice(int choice)
     {
-        script.Call(currentCallbacks[choice]);
+        try
+        {
+            script.Call(currentCallbacks[choice]);
+        }
+        catch (SyntaxErrorException e)
+        {
+            Log("Lua Syntax Error: " + e.DecoratedMessage);
+        }
+        catch (ScriptRuntimeException e)
+        {
+            Log("Lua Runtime Error: " + e.DecoratedMessage);
+        }
+        catch (Exception e)
+        {
+            Log(e.Message);
+        }
     }
 
     void LuaReadAllFiles(string folder)
@@ -37,11 +52,15 @@ public class Main : MonoBehaviour {
             }
             catch (SyntaxErrorException e)
             {
-                Debug.LogError("Lua Syntax Error: " + e.DecoratedMessage);
+                Log("Lua Syntax Error: " + e.DecoratedMessage);
             }
             catch (ScriptRuntimeException e)
             {
-                Debug.LogError("Lua Runtime Error: " + e.DecoratedMessage);
+                Log("Lua Runtime Error: " + e.DecoratedMessage);
+            }
+            catch (Exception e)
+            {
+                Log(e.Message);
             }
         }
     }
@@ -78,11 +97,15 @@ public class Main : MonoBehaviour {
             }
             catch (SyntaxErrorException e)
             {
-                Debug.LogError("Lua Syntax Error: " + e.DecoratedMessage);
+                Log("Lua Syntax Error: " + e.DecoratedMessage);
             }
             catch (ScriptRuntimeException e)
             {
-                Debug.LogError("Lua Runtime Error: " + e.DecoratedMessage);
+                Log("Lua Runtime Error: " + e.DecoratedMessage);
+            }
+            catch (Exception e)
+            {
+                Log(e.Message);
             }
         }
         catch (Exception e)
