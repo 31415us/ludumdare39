@@ -1,5 +1,16 @@
 data = {}
-data.people = {}
+data.people = {
+    willy = {
+        on_new_day = function()
+            Log("willy new day")
+        end,
+    },
+    daisy = {
+        on_new_day = function()
+            Log("daisy new day")
+        end,
+    }
+}
 
 local king = require "king"
 

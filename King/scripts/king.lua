@@ -115,11 +115,16 @@ this.make_done_choice = function()
                 local rejectFn = waiting[i].on_reject
                 if (rejectFn ~= nil) then rejectFn() end
             end
+            data.king.waiting = {}
             data.day = data.day + 1
             data.king.health = data.king.health - 1
             if (data.king.health <= 0) then
                 SetChoices(you_died)
             else
+                for k,v in pairs(data.people) do
+                    local f = v.on_new_day
+                    if (f ~= nil) then f() end
+                end
                 SetChoices(this.make_new_day())
             end
         end,
