@@ -1,10 +1,24 @@
 require "Stack"
+require "math"
 
 data.king = {
     convesation_stack = {},
     waiting = {},
     current_audience = -1,
 }
+
+local health_texts = {
+    "I feel horrible... I think I'm not going to make it much longer",
+    "Tonight I coughed bood... ",
+    "It's getting worse... ",
+    "I feel so powerless...",
+    "I feel so old...",
+}
+
+local get_health_text = function()
+    local num = math.ceil((data.king.health / data.king.max_health) * (#health_texts - 0.01))
+    return "(" .. data.king.health .. ") " .. health_texts[num]
+end
 
 local you_died = {
     text = "you died!",
@@ -75,6 +89,22 @@ this.make_send_in = function()
     }
 end
 
+this.make_new_day = function()
+    local text = "Day " .. data.day .. ":\n"
+    text = text .. get_health_text() .. "\n"
+    return {
+        text = text,
+        choices = {
+            {
+                "Let's work...",
+                function()
+                    SetChoices(this.make_good_morning())
+                end,
+            }
+        }
+    }
+end
+
 this.make_done_choice = function()
     return {
         "I'm done for today...",
@@ -85,7 +115,13 @@ this.make_done_choice = function()
                 local rejectFn = waiting[i].on_reject
                 if (rejectFn ~= nil) then rejectFn() end
             end
-            SetChoices(you_died)
+            data.day = data.day + 1
+            data.king.health = data.king.health - 1
+            if (data.king.health <= 0) then
+                SetChoices(you_died)
+            else
+                SetChoices(this.make_new_day())
+            end
         end,
     }
 end
@@ -119,7 +155,7 @@ this.make_good_morning = function()
 end
 
 return {
-    make_good_morning = this.make_good_morning,
+    make_new_day = this.make_new_day,
     leave_conversation = this.leave_conversation,
     push_conversation = this.push_conversation,
 }

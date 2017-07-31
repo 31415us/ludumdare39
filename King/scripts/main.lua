@@ -3,6 +3,10 @@ data.people = {}
 
 local king = require "king"
 
+data.day = 1
+data.king.health = 20
+data.king.max_health = 20
+
 local tmp = {
     name = "Bob the farmer",
     on_receive = function()
@@ -80,4 +84,4 @@ local pauls_cows = {
 }
 ]]--
 
-SetChoices(king.make_good_morning())
+SetChoices(king.make_new_day())
