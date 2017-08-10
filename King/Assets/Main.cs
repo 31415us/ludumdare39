@@ -8,25 +8,23 @@ using UnityEngine.UI;
 using System.Text;
 
 public class Main : MonoBehaviour {
+    public Button buttonPrefab;
+
     Script script;
 
-    DynValue[] currentCallbacks = new DynValue[8];
-    //List<Text> choiceTexts = new List<Text>();
-    //List<Button> choiceButtons = new List<Button>();
     Text textField;
     Text debugField;
 
-    Transform choices4Panel;
-    Transform choices8Panel;
+    Transform choicesNPanel;
 
     int debugLinesTop = -1;
     string[] debugLines = new string[20];
 
-    public void OnChoice(int choice)
+    public void CallCallback(DynValue v)
     {
         try
         {
-            script.Call(currentCallbacks[choice]);
+            script.Call(v);
         }
         catch (SyntaxErrorException e)
         {
@@ -42,50 +40,11 @@ public class Main : MonoBehaviour {
         }
     }
 
-    void LuaReadAllFiles(string folder)
-    {
-        foreach (var file in Directory.GetFiles(folder, "*.lua", SearchOption.AllDirectories))
-        {
-            try
-            {
-                string code = File.ReadAllText(file, System.Text.Encoding.UTF8);
-                script.DoString(code, null, file);
-            }
-            catch (SyntaxErrorException e)
-            {
-                Log("Lua Syntax Error: " + e.DecoratedMessage);
-            }
-            catch (ScriptRuntimeException e)
-            {
-                Log("Lua Runtime Error: " + e.DecoratedMessage);
-            }
-            catch (Exception e)
-            {
-                Log(e.Message);
-            }
-        }
-    }
-
     // Use this for initialization
     void Start () {
         textField = transform.Find("Text").GetComponent<Text>();
         debugField = transform.Find("ConsolePanel/Console").GetComponent<Text>();
-
-        choices4Panel = transform.Find("4Choices");
-        for (int i = 1; i <= 4; i++)
-        {
-            Button button = choices4Panel.Find("Choice" + i).GetComponent<Button>();
-            int num = i - 1;
-            button.onClick.AddListener(() => OnChoice(num));
-        }
-
-        choices8Panel = transform.Find("8Choices");
-        for (int i = 1; i <= 8; i++)
-        {
-            Button button = choices8Panel.Find("Choice" + i).GetComponent<Button>();
-            int num = i - 1;
-            button.onClick.AddListener(() => OnChoice(num));
-        }
+        choicesNPanel = transform.Find("NChoices");
 
         try
         {
@@ -112,6 +71,10 @@ public class Main : MonoBehaviour {
             catch (ScriptRuntimeException e)
             {
                 Log("Lua Runtime Error: " + e.DecoratedMessage);
+                foreach (var stl in e.CallStack)
+                {
+                    Log("  -> " + script.GetSourceCode(stl.Location.SourceIdx).Name + ": " + stl.Location.FromLine + ": " + stl.Location.FromChar);
+                }
             }
             catch (Exception e)
             {
@@ -122,52 +85,56 @@ public class Main : MonoBehaviour {
         {
             Log(e.Message);
         }
-
-        //LuaReadAllFiles("scripts");
     }
 
     public void SetChoices(Table data)
     {
+        
         textField.text = data.Get("text").String;
 
+        RectTransform content = choicesNPanel.Find("Scroll View/Viewport/Content") as RectTransform;
+        Scrollbar scrollbar = choicesNPanel.Find("Scroll View/Scrollbar Vertical").GetComponent<Scrollbar>();
+        scrollbar.value = 1.0f;
         Table choices = data.Get("choices").Table;
-        Transform panel = null;
-        choices8Panel.gameObject.SetActive(false);
-        choices4Panel.gameObject.SetActive(false);
-        int size = choices.Length;
-        int max = 0;
-        if (size <= 4)
+        Transform panel = choicesNPanel;
+        float yStep = 90;
+        int count = choices.Length;
+        int columns = 1;
+        if (count > 4) columns = 2;
+        int rows = count / columns + ((count % columns == 0) ? 0 : 1);
+        float height = 90.0f * rows + 10.0f;
+        float currentY = -50.0f;
+        content.sizeDelta = new Vector2(content.sizeDelta.x, height);
+        float buttonSizeX = (content.sizeDelta.x - 10.0f - 10.0f * columns) / (float)columns;
+        float buttonStartX = 10.0f + buttonSizeX / 2.0f;
+
+        for (int i = 0; i < content.childCount; i++)
         {
-            panel = choices4Panel;
-            max = 4;
-        }
-        else if (size <= 8)
-        {
-            panel = choices8Panel;
-            max = 8;
-        }
-        else
-        {
-            Log("Error: can't display more than 8 choices...");
-            return;
+            GameObject.Destroy(content.GetChild(i).gameObject);
         }
 
-        panel.gameObject.SetActive(true);
-        int i = 1;
-        for (; i <= max; i++)
+        int c = 0;
+        for (int row = 0; row < rows; row++)
         {
-            Table choice = choices.Get(i).Table;
-            if (choice == null) break;
-            Button button = panel.Find("Choice" + i).GetComponent<Button>();
-            Text text = button.transform.Find("Text").GetComponent<Text>();
-            text.text = choice.Get(1).String;
-            button.gameObject.SetActive(true);
-            currentCallbacks[i - 1] = choice.Get(2);
-        }
-        for (; i <= max; i++)
-        {
-            Button button = panel.Find("Choice" + i).GetComponent<Button>();
-            button.gameObject.SetActive(false);
+            float currentX = buttonStartX;
+            for (int column = 0; column < columns; column++)
+            {
+                Button button = GameObject.Instantiate<Button>(buttonPrefab);
+                button.transform.SetParent(content.transform);
+                RectTransform buttonTransf = button.GetComponent<RectTransform>();
+                buttonTransf.localPosition = new Vector3(currentX, currentY, 0.0f);
+                buttonTransf.sizeDelta = new Vector2(buttonSizeX, 80.0f);
+                currentX += buttonSizeX + 10.0f;
+
+                Table choice = choices.Get(c + 1).Table;
+                Text text = button.transform.Find("Text").GetComponent<Text>();
+                text.text = choice.Get(1).String;
+                button.onClick.AddListener(() => CallCallback(choice.Get(2)));
+
+                c++;
+                if (c >= count) return;
+            }
+            currentY -= yStep;
         }
     }
 

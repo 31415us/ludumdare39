@@ -90,6 +90,7 @@ this.make_send_in = function()
 end
 
 this.make_new_day = function()
+    a = b.c
     local text = "Day " .. data.day .. ":\n"
     text = text .. get_health_text() .. "\n"
     return {

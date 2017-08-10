@@ -34,6 +34,25 @@ local tmp = {
     waiting = true,
 }
 
+local farmer = {
+    name = "Bob the farmer",
+    on_receive = function()
+        SetChoices({
+            text = "My lord, my deepest thanks for taking the time...",
+            choices = {
+                {
+                    "goodbye",
+                    king.leave_conversation,
+                }
+            },
+        })
+    end,
+    on_reject = function()
+        Log("Bob the farmer was rejected...")
+    end,
+    waiting = true,
+}
+
 data.king.waiting = {
     {
         name = "Sir Jamie Oliver",
@@ -71,6 +90,12 @@ data.king.waiting = {
         end,
         waiting = true,
     },
+    farmer,
+    farmer,
+    farmer,
+    farmer,
+    farmer,
+    farmer,
 }
 
 --[[
